@@ -3,8 +3,5 @@
 import sys
 import argparse
 sys.path.append("../lib")
-
 import deleter
 import config_parser
-
-print "hi dude!"
