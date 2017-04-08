@@ -5,7 +5,7 @@ import os
 
 
 class Deleter(object):
-    def __init__(self, re_bin_location=os.environ['HOME'] + '/recycle_bin',
+    def __init__(self, re_bin_location=os.path.append(os.environ['HOME'], '/recycle_bin'),
                  options=dict()):
         self.re_bin_location = re_bin_location
         try:
@@ -23,12 +23,12 @@ class Deleter(object):
         print 'dir'
         operation_results = []
         try:
-            shutil.move(dirname, self.re_bin_location + '/')
+            shutil.move(dirname, self.re_bin_location)
             operation_results.append('dir "{}" with all contents moved to {}'.format(dirname, self.re_bin_location))
         except shutil.Error:
             if self.options['replace_same_name'] is True:
                 shutil.rmtree(self.re_bin_location + '/' + dirname)
-                shutil.copytree(dirname, self.re_bin_location + '/' + dirname)
+                shutil.copytree(dirname, os.path.join(self.re_bin_location, dirname))
                 shutil.rmtree(dirname)
                 operation_results.append('dir "{}" with all contents moved to {}'.format(dirname, self.re_bin_location))
             elif self.options['replace_same_name'] is False:
@@ -39,11 +39,11 @@ class Deleter(object):
     def deletefile(self, filename):
         operation_results = []
         try:
-            shutil.move(filename, self.re_bin_location + '/')
+            shutil.move(filename, self.re_bin_location)
             operation_results.append('file "{}" moved to {}'.format(filename, self.re_bin_location))
         except shutil.Error:
             if self.options['replace_same_name'] is True:
-                shutil.copy(filename, self.re_bin_location + '/')
+                shutil.copy(os.path.join(filename, self.re_bin_location))
                 os.remove(filename)
                 operation_results.append('file "{}" moved to {}'.format(filename, self.re_bin_location))
             elif self.options['replace_same_name'] is False:
