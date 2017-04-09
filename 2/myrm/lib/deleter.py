@@ -1,18 +1,24 @@
 import shutil
 import os
+import sys
 
 # TODO separate filenames from paths
 
 
 class Deleter(object):
-    def __init__(self, re_bin_location=os.path.append(os.environ['HOME'], '/recycle_bin'),
-                 options=dict()):
-        self.re_bin_location = re_bin_location
+    def __init__(self, options=dict()):
+        self.options = options
+        try:
+            self.re_bin_location = self.options['re_bin_location']
+        except KeyError:
+            self.re_bin_location=os.path.join(os.environ['HOME'], 'recycle_bin')
+            print 'using bin at {}'.format(self.re_bin_location)
+
         try:
             os.mkdir(self.re_bin_location)
         except OSError:
-            'using bin at {}'.format(re_bin_location)
-        self.options = options
+            print '{} already exists'.format(self.re_bin_location)
+            sys.exit()
 
     def report_results(self, operation_results):
         if self.options['output'] is 'verbose' and len(operation_results) > 0:
@@ -25,10 +31,10 @@ class Deleter(object):
         try:
             shutil.move(dirname, self.re_bin_location)
             operation_results.append('dir "{}" with all contents moved to {}'.format(dirname, self.re_bin_location))
-        except shutil.Error:
+        except OSError:
             if self.options['replace_same_name'] is True:
-                shutil.rmtree(self.re_bin_location + '/' + dirname)
-                shutil.copytree(dirname, os.path.join(self.re_bin_location, dirname))
+                shutil.rmtree(os.path.join(self.re_bin_location, dirname))
+                shutil.copytree(dirname, self.re_bin_location)
                 shutil.rmtree(dirname)
                 operation_results.append('dir "{}" with all contents moved to {}'.format(dirname, self.re_bin_location))
             elif self.options['replace_same_name'] is False:
@@ -41,9 +47,9 @@ class Deleter(object):
         try:
             shutil.move(filename, self.re_bin_location)
             operation_results.append('file "{}" moved to {}'.format(filename, self.re_bin_location))
-        except shutil.Error:
+        except OSError:
             if self.options['replace_same_name'] is True:
-                shutil.copy(os.path.join(filename, self.re_bin_location))
+                shutil.copy2(filename, self.re_bin_location)
                 os.remove(filename)
                 operation_results.append('file "{}" moved to {}'.format(filename, self.re_bin_location))
             elif self.options['replace_same_name'] is False:
@@ -52,10 +58,11 @@ class Deleter(object):
         return operation_results
 
     def delete(self, object_name):  # wrapper that unites all delete methods and handles errors
-        try:
+        if os.path.exists(object_name):
             if os.path.isfile(object_name):
                 self.deletefile(object_name)
             else:
                 self.deletedir(object_name)
-        except OSError:
-            print 'no file or directory named "{}"'.format(object_name)
+        else:
+            print 'no file or dir named "{}"'.format(object_name)
+            return
