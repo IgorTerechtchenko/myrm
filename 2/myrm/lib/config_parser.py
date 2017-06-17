@@ -13,6 +13,6 @@ class ConfigParser(object):
     def get_options(self):
         try:
             return self.options_dict
-        except NameError:
+        except AttributeError:
             print 'no optoins parsed'
             sys.exit()
